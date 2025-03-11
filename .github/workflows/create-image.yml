@@ -1,0 +1,21 @@
+name: Build Custom Image
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: image-generator-linux-24
+    snapshot: katiem0-small-CustomImage
+    steps:
+      - name: Add pre-script
+        run: |
+          sudo mkdir /root/actions-runner/
+          echo "echo ##### PRE SCRIPT #####" | sudo tee /opt/pre-script.sh
+          sudo chmod +x /opt/pre-script.sh
+          echo "ACTIONS_RUNNER_HOOK_JOB_STARTED=/opt/pre-script.sh" | sudo tee -a /etc/environment /root/actions-runner/.env
+
+      - name: Add post-script
+        run: |
+          echo "echo ##### POST SCRIPT #####" | sudo tee /opt/post-script.sh
+          sudo chmod +x /opt/post-script.sh
+          echo "ACTIONS_RUNNER_HOOK_JOB_COMPLETED=/opt/post-script.sh" | sudo tee -a /etc/environment /root/actions-runner/.env
