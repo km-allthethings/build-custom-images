@@ -9,7 +9,6 @@ jobs:
     steps:
       - name: Add pre-script
         run: |
-          sudo mkdir /root/actions-runner/
           echo "echo ##### PRE SCRIPT #####" | sudo tee /opt/pre-script.sh
           sudo chmod +x /opt/pre-script.sh
           echo "ACTIONS_RUNNER_HOOK_JOB_STARTED=/opt/pre-script.sh" | sudo tee -a /etc/environment /root/actions-runner/.env
