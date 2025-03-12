@@ -13,9 +13,11 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup private key PEM file
         run: |
-          # Write private key from secret to a secure file
+          # Create the auth directory with proper permissions
           sudo mkdir -p /auth
-          echo $PRIVATE_KEY > /auth/pre-script-auth.pem
+          sudo chmod 700 /auth
+          # Write private key from secret to a secure file
+          echo "$PRIVATE_KEY" | sudo tee /auth/pre-script-auth.pem > /dev/null
           # Restrict file permissions
           sudo chmod 600 /auth/pre-script-auth.pem
       - name: Add pre-script
