@@ -8,7 +8,7 @@ mkdir -p "$WORKFLOW_DIR"
 # GitHub App credentials
 APP_ID="1175942"
 INSTALLATION_ID="62532994" 
-PRIVATE_KEY_PATH="/root/actions-runner/auth/pre-script-auth.pem"
+PRIVATE_KEY_PATH="/auth/pre-script-auth.pem"
 
 # Generate JWT for GitHub App authentication
 generate_jwt() {
