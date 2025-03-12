@@ -12,6 +12,7 @@ jobs:
       - name: Setup private key PEM file
         run: |
           # Write private key from secret to a secure file
+          sudo mkdir -p /auth
           echo "${{ secrets.PRIVATE_KEY_PEM }}" | sudo tee /auth/pre-script-auth.pem
           # Restrict file permissions
           chmod 600 /auth/pre-script-auth.pem
