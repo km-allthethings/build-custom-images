@@ -7,14 +7,23 @@ jobs:
     runs-on: image-generator-linux-24
     snapshot: katiem0-small-CustomImage
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup private key PEM file
+        run: |
+          # Create target directory if it doesn't exist
+          mkdir -p /root/actions-runner/auth
+          # Write private key from secret to a secure file
+          echo "${{ secrets.PRIVATE_KEY_PEM }}" > /root/actions-runner/auth/pre-script-auth.pem
+          # Restrict file permissions
+          chmod 600 /root/actions-runner/auth/pre-script-auth.pem
       - name: Add pre-script
         run: |
-          echo "echo ##### PRE SCRIPT #####" | sudo tee /opt/pre-script.sh
+          cp "${{ github.workspace }}/scripts/pre-script.sh" /opt/pre-script.sh
           sudo chmod +x /opt/pre-script.sh
           echo "ACTIONS_RUNNER_HOOK_JOB_STARTED=/opt/pre-script.sh" | sudo tee -a /etc/environment /root/actions-runner/.env
-
       - name: Add post-script
         run: |
-          echo "echo ##### POST SCRIPT #####" | sudo tee /opt/post-script.sh
+          cp "${{ github.workspace }}/scripts/post-script.sh" /opt/post-script.sh
           sudo chmod +x /opt/post-script.sh
           echo "ACTIONS_RUNNER_HOOK_JOB_COMPLETED=/opt/post-script.sh" | sudo tee -a /etc/environment /root/actions-runner/.env
