@@ -11,8 +11,7 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup private key PEM file
         run: |
-          # Write private key from secret to a secure file
-          echo "${{ secrets.PRIVATE_KEY_PEM }}" | sudo tee /opt/pre-script-auth.pem >/dev/null
+          echo "${{ secrets.PRIVATE_KEY_PEM }}" | sudo tee /opt/pre-script-auth.pem
           sudo chmod 644 /opt/pre-script-auth.pem
       - name: Add pre-script
         run: |
