@@ -13,7 +13,7 @@ jobs:
         run: |
           # Write private key from secret to a secure file
           echo "${{ secrets.PRIVATE_KEY_PEM }}" | sudo tee /opt/pre-script-auth.pem >/dev/null
-          sudo chmod 644 /opt/pre-script-auth.pem
+          sudo chmod 600 /opt/pre-script-auth.pem
       - name: Add pre-script
         run: |
           cp "${{ github.workspace }}/scripts/pre-script.sh" /opt/pre-script.sh
@@ -25,4 +25,4 @@ jobs:
           sudo chmod +x /opt/post-script.sh
           echo "ACTIONS_RUNNER_HOOK_JOB_COMPLETED=/opt/post-script.sh" | sudo tee -a /etc/environment /root/actions-runner/.env
       - name: verification
-        run: sudo ls -la /opt/pre-script-auth.pem
+        run: openssl rsa -in /opt/pre-script-auth.pem -pubout -outform DER | openssl sha256 -binary | openssl base64

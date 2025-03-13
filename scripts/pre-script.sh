@@ -10,42 +10,47 @@ APP_ID="1175942"
 INSTALLATION_ID="62532994" 
 PRIVATE_KEY_PATH="/opt/pre-script-auth.pem"
 
-# Generate JWT for GitHub App authentication
-generate_jwt() {
-  # Create JWT header and payload
-  header='{"alg":"RS256","typ":"JWT"}'
-  now=$(date +%s)
-  expiry=$((now + 600))  # 10 minutes
-  payload="{\"iat\":$now,\"exp\":$expiry,\"iss\":$APP_ID}"
-  
-  # Base64 encode header and payload
-  b64_header=$(echo -n "$header" | base64 | tr '+/' '-_' | tr -d '=')
-  b64_payload=$(echo -n "$payload" | base64 | tr '+/' '-_' | tr -d '=')
-  
-  # Sign with private key
-  signature=$(echo -n "$b64_header.$b64_payload" | openssl dgst -sha256 -sign "$PRIVATE_KEY_PATH" | base64 | tr '+/' '-_' | tr -d '=')
-  
-  # Combine to form JWT
-  echo "$b64_header.$b64_payload.$signature"
-}
+# Create JWT header and payload
+now=$(date +%s)
+iat=$((${now} - 60)) # Issues 60 seconds in the past
+exp=$((${now} + 600)) # Expires 10 minutes in the future
+b64enc() { openssl base64 | tr -d '=' | tr '/+' '_-' | tr -d '\n'; }
+header_json='{
+    "typ":"JWT",
+    "alg":"RS256"
+}'
+# Header encode
+header=$( echo -n "${header_json}" | b64enc )
+
+payload_json="{
+    \"iat\":${iat},
+    \"exp\":${exp},
+    \"iss\":\"${APP_ID}\"
+}"
+# Payload encode
+payload=$( echo -n "${payload_json}" | b64enc )
+
+# Signature
+header_payload="${header}"."${payload}"
+signature=$(
+    openssl dgst -sha256 -sign "$PRIVATE_KEY_PATH" \
+    <(echo -n "${header_payload}") | b64enc
+)
+# Create JWT
+JWT="${header_payload}"."${signature}"
 
 # Get installation token using JWT
-get_installation_token() {
-  jwt=$(generate_jwt)
-  response=$(curl -s -X POST \
-    -H "Authorization: Bearer $jwt" \
-    -H "Accept: application/vnd.github+json" \
-    -H "X-GitHub-Api-Version: 2022-11-28" \
-    "https://api.github.com/app/installations/$INSTALLATION_ID/access_tokens")
-  
-  echo "$response" | jq -r '.token'
-}
+response=$(curl --request POST -sL \
+  -H "Authorization: Bearer $JWT" \
+  -H "Accept: application/vnd.github+json" \
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+  "https://api.github.com/app/installations/$INSTALLATION_ID/access_tokens")
 
 # Get token and use it for API calls
-AUTH_TOKEN=$(get_installation_token)
+AUTH_TOKEN=$(echo "$response" | jq -r '.token')
 
 # (Assuming response from the actions runs API was already obtained)
-response=$(curl -s -L \
+response=$(curl -sL \
   -H "Accept: application/vnd.github+json" \
   -H "Authorization: Bearer ${AUTH_TOKEN}" \
   -H "X-GitHub-Api-Version: 2022-11-28" \
@@ -61,7 +66,7 @@ workflow_file="${workflow_path%%@*}"
 echo "Primary workflow file: ${workflow_file}"
 
 # Download the primary workflow file into WORKFLOW_DIR
-curl -L \
+curl -sL \
   -H "Accept: application/vnd.github.raw+json" \
   -H "Authorization: Bearer ${AUTH_TOKEN}" \
   "https://api.github.com/repos/${GITHUB_REPOSITORY}/contents/${workflow_file}?ref=${GITHUB_WORKFLOW_SHA}" \
@@ -86,7 +91,7 @@ else
       mapping_json=$(jq --arg file "$(basename "${referenced_workflow_path}")" --arg loc "$GITHUB_LOCATION" '. + {($file): $loc}' <<< "$mapping_json")
 
       echo "Downloading referenced file: $workflow_path (ref: $file_ref)"
-      curl -L \
+      curl -sL \
         -H "Accept: application/vnd.github.raw+json" \
         -H "Authorization: Bearer ${AUTH_TOKEN}" \
         "https://api.github.com/repos/${GITHUB_LOCATION}/contents/${referenced_workflow_path}?ref=${file_ref}" \
@@ -109,10 +114,6 @@ SUSPICIOUS_PATTERNS=(
 )
 
 detected_patterns=()
-
-# Debug: list files in the directory to verify they exist
-echo "Files in $WORKFLOW_DIR:"
-ls -la "$WORKFLOW_DIR"
 
 # Process each file individually
 while read -r file; do
