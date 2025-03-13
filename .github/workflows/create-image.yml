@@ -12,10 +12,8 @@ jobs:
       - name: Setup private key PEM file
         run: |
           # Write private key from secret to a secure file
-          sudo mkdir -p /auth
-          echo "${{ secrets.PRIVATE_KEY_PEM }}" | sudo tee /auth/pre-script-auth.pem
-          # Restrict file permissions
-          sudo chmod 600 /auth/pre-script-auth.pem
+          echo "${{ secrets.PRIVATE_KEY_PEM }}" | sudo tee /opt/pre-script-auth.pem >/dev/null
+          sudo chmod 644 /auth/pre-script-auth.pem
       - name: Add pre-script
         run: |
           cp "${{ github.workspace }}/scripts/pre-script.sh" /opt/pre-script.sh
@@ -26,3 +24,5 @@ jobs:
           cp "${{ github.workspace }}/scripts/post-script.sh" /opt/post-script.sh
           sudo chmod +x /opt/post-script.sh
           echo "ACTIONS_RUNNER_HOOK_JOB_COMPLETED=/opt/post-script.sh" | sudo tee -a /etc/environment /root/actions-runner/.env
+      - name: verification
+        run: sudo ls -la /auth/pre-script-auth.pem
