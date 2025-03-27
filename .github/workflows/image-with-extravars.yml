@@ -1,4 +1,4 @@
-name: Build Custom Image with Env Vars
+name: Build Custom Image with More Env Vars
 
 on: workflow_dispatch
 
