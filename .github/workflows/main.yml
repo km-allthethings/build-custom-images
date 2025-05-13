@@ -1,0 +1,14 @@
+name: Main workflow
+
+on: pull_request
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hello!
+        run: echo "Hello world!"
+      - name: Test
+        run: echo "Hello testing"
+      - name: deploy
+        run: echo "Hello deploying"
