@@ -44,10 +44,10 @@ jobs:
         run: |
           echo "HTTP_PROXY=10.2.2.4:3128" | sudo tee -a /etc/environment
           echo "HTTPS_PROXY=10.2.2.4:3128" | sudo tee -a /etc/environment
-          sudo echo "NO_PROXY='localhost,127.0.0.1,localaddress,.localdomain.com'" >> /etc/environment
+          echo "NO_PROXY='localhost,127.0.0.1,localaddress,.localdomain.com'" | sudo tee -a /etc/environment
 
       - name: Add proxy to /root/actions-runner/.env
         run: |
           echo "HTTP_PROXY=10.2.2.4:3128" | sudo tee -a /root/actions-runner/.env
           echo "HTTPS_PROXY=10.2.2.4:3128" | sudo tee -a /root/actions-runner/.env
-          sudo echo "NO_PROXY='localhost,127.0.0.1,localaddress,.localdomain.com'" >> /root/actions-runner/.env
+          echo "NO_PROXY='localhost,127.0.0.1,localaddress,.localdomain.com'"| sudo tee -a /root/actions-runner/.env
