@@ -1,14 +1,19 @@
-name: Build Custom Image with More Env Vars
+name: Image ubuntu24 Build with Proxy - /etc/environment
 
-on: workflow_dispatch
+on:
+  push:
+    paths:
+      - '.github/workflows/image-ubu24-with-proxy.yml'
+  workflow_dispatch:
+  workflow_call:
 
 jobs:
   build:
     runs-on: image-generator-linux-24
-    snapshot: katiem0-morevars-smallimage
+    snapshot: proxy-image-ubu24-x64
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5.0.0
       - name: Setup private key PEM file
         run: |
           # Write private key from secret to a secure file
@@ -19,16 +24,17 @@ jobs:
           cp "${{ github.workspace }}/scripts/pre-script.sh" /opt/pre-script.sh
           sudo chmod +x /opt/pre-script.sh
           echo "ACTIONS_RUNNER_HOOK_JOB_STARTED=/opt/pre-script.sh" | sudo tee -a /etc/environment /root/actions-runner/.env
+
       - name: Add post-script
         run: |
           cp "${{ github.workspace }}/scripts/post-script.sh" /opt/post-script.sh
           sudo chmod +x /opt/post-script.sh
           echo "ACTIONS_RUNNER_HOOK_JOB_COMPLETED=/opt/post-script.sh" | sudo tee -a /etc/environment /root/actions-runner/.env
+
       - name: Add pre-defined variables
         run: |
           echo "TEST_VARIABLE=value1" | sudo tee -a /etc/environment /root/actions-runner/.env
           echo "TEST_ENV_REQUIRED=needed-for-everything" | sudo tee -a /etc/environment /root/actions-runner/.env
-
 
       - name: Add pre-defined variables to /etc/environment
         run: |
@@ -45,9 +51,3 @@ jobs:
           echo "HTTP_PROXY=10.2.2.4:3128" | sudo tee -a /etc/environment
           echo "HTTPS_PROXY=10.2.2.4:3128" | sudo tee -a /etc/environment
           echo "NO_PROXY='localhost,127.0.0.1,localaddress,.localdomain.com'" | sudo tee -a /etc/environment
-
-      - name: Add proxy to /root/actions-runner/.env
-        run: |
-          echo "HTTP_PROXY=10.2.2.4:3128" | sudo tee -a /root/actions-runner/.env
-          echo "HTTPS_PROXY=10.2.2.4:3128" | sudo tee -a /root/actions-runner/.env
-          echo "NO_PROXY='localhost,127.0.0.1,localaddress,.localdomain.com'"| sudo tee -a /root/actions-runner/.env
