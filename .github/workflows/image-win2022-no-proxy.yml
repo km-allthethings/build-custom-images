@@ -1,0 +1,16 @@
+name: Win - Image Build with no Proxy
+
+on:
+  push:
+    paths:
+      - '.github/workflows/image-win2022-no-proxy.yml'
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: image-generator-win2022
+    snapshot: custom-img-win22-x64
+    steps:
+      - name: noop
+        run: echo "noop"
