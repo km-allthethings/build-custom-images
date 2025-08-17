@@ -48,6 +48,6 @@ jobs:
   
       - name: Add proxy to /etc/environment
         run: |
-          echo "HTTP_PROXY=10.0.1.4:3128" | sudo tee -a /etc/environment
-          echo "HTTPS_PROXY=10.0.1.4:3128" | sudo tee -a /etc/environment
+          echo "HTTP_PROXY=10.0.1.4" | sudo tee -a /etc/environment
+          echo "HTTPS_PROXY=10.0.1.4" | sudo tee -a /etc/environment
           echo "NO_PROXY='localhost,127.0.0.1,localaddress,.localdomain.com'" | sudo tee -a /etc/environment
