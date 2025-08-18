@@ -12,6 +12,11 @@ jobs:
     runs-on: image-generator-linux-24
     snapshot: proxy-image-ubu24-x64
     steps:
+      - name: Add proxy to /etc/environment
+        run: |
+          echo "HTTP_PROXY=10.0.1.4:3128" | sudo tee -a /etc/environment
+          echo "HTTPS_PROXY=10.0.1.4:3129" | sudo tee -a /etc/environment
+          echo "NO_PROXY='localhost,127.0.0.1,localaddress,.localdomain.com'" | sudo tee -a /etc/environment
       - name: Checkout
         uses: actions/checkout@v5.0.0
       - name: Setup private key PEM file
@@ -45,9 +50,3 @@ jobs:
         run: |
           echo "TEST_VARIABLE=value1" | sudo tee -a /root/actions-runner/.env
           echo "TEST_ENV_REQUIRED=needed-for-everything" | sudo tee -a /root/actions-runner/.env
-  
-      - name: Add proxy to /etc/environment
-        run: |
-          echo "HTTP_PROXY=10.0.1.4" | sudo tee -a /etc/environment
-          echo "HTTPS_PROXY=10.0.1.4" | sudo tee -a /etc/environment
-          echo "NO_PROXY='localhost,127.0.0.1,localaddress,.localdomain.com'" | sudo tee -a /etc/environment
