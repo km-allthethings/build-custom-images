@@ -20,21 +20,25 @@ jobs:
           [Environment]::SetEnvironmentVariable("https_proxy", "http://10.0.2.4:3128", [System.EnvironmentVariableTarget]::Machine)
       - name: Set no_proxy (Machine)
         run: |
-          [Environment]::SetEnvironmentVariable("no_proxy", "localhost,127.0.0.1,.svc,168.63.129.16,10.0.2.4", [System.EnvironmentVariableTarget]::Machine)
+          [Environment]::SetEnvironmentVariable("no_proxy", "localhost,127.0.0.1,168.63.129.16,10.0.2.4", [System.EnvironmentVariableTarget]::Machine)
       - name: Set WinHTTP Proxy
         run: |
-          new-item proxy.json
-          set-content .\proxy.json '{
-          "ProxyIsEnabled": true,
-          "Proxy": "http://10.0.2.4:3128",
-          "ProxyBypass": "localhost;127.0.0.1;10.0.2.4;168.63.129.16",
-          "AutoConfigIsEnabled": false,
-          "AutoDetect": false,
-          "PerUserProxySettings": false
-          }'
+          # Set the system-wide proxy and a bypass list
+          netsh winhttp set proxy "10.0.2.4:3128" bypass-list="<local>;localhost;127.0.0.1;10.0.2.4;168.63.129.16"
+          
+          # Verify the proxy is set correctly
+          netsh winhttp show proxy
+          # new-item proxy.json
+          # set-content .\proxy.json '{
+          # "ProxyIsEnabled": true,
+          # "Proxy": "10.0.2.4:3128",
+          # "ProxyBypass": "localhost;127.0.0.1;10.0.2.4;168.63.129.16",
+          # "AutoConfigIsEnabled": false,
+          # "AutoDetect": false,
+          # "PerUserProxySettings": false
+          # }'
 
-          get-content .\proxy.json
+          # get-content .\proxy.json
 
-          netsh winhttp set advproxy setting-scope=machine settings-file=.\proxy.json
-          netsh winhttp set proxy 10.0.2.4:3128
-          netsh winhttp show advproxy
+          # netsh winhttp set advproxy setting-scope=machine settings-file=.\proxy.json
+          # netsh winhttp show advproxy
