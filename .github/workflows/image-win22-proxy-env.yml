@@ -36,4 +36,5 @@ jobs:
           get-content .\proxy.json
 
           netsh winhttp set advproxy setting-scope=machine settings-file=.\proxy.json
+          netsh winhttp set proxy 10.0.2.4:3128
           netsh winhttp show advproxy
