@@ -32,7 +32,7 @@ jobs:
       - name: Add container customizations
         run: |
           git clone https://github.com/actions/runner-container-hooks.git /opt/runner-container-hooks
-          cd runner-container-hooks/packages/hooklib
+          cd /opt/runner-container-hooks/packages/hooklib
           npm install && npm run build
           cd ../docker
           npm install && npm run build
