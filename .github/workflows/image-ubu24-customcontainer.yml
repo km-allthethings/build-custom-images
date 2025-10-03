@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     runs-on: image-generator-linux-24
-    snapshot: image-customcontainer-ubu24-x64
+    snapshot: image-custcontain-ubu24-x64
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -120,7 +120,7 @@ jobs:
           docker pull quay.io/prometheus/prometheus:latest
       - name: Add container customizations
         run: |
-          git clone https://github.com/Avocado-Extra-Charge/runner-container-hooks/settings /opt/runner-container-hooks
+          git clone https://github.com/Avocado-Extra-Charge/runner-container-hooks.git /opt/runner-container-hooks
           cd /opt/runner-container-hooks/packages/hooklib
           npm install && npm run build
           cd ../docker
