@@ -29,14 +29,6 @@ jobs:
           cp "${{ github.workspace }}/scripts/post-script.sh" /opt/post-script.sh
           sudo chmod +x /opt/post-script.sh
           echo "ACTIONS_RUNNER_HOOK_JOB_COMPLETED=/opt/post-script.sh" | sudo tee -a /etc/environment /root/actions-runner/.env
-      - name: Add container customizations
-        run: |
-          git clone https://github.com/actions/runner-container-hooks.git /opt/runner-container-hooks
-          cd /opt/runner-container-hooks/packages/hooklib
-          npm install && npm run build
-          cd ../docker
-          npm install && npm run build
-          echo "ACTIONS_RUNNER_CONTAINER_HOOKS=/opt/runner-container-hooks/packages/docker/dist/index.js" | sudo tee -a /etc/environment /root/actions-runner/.env
       - name: Disable Stub DNS
         run: |
           sudo mkdir -p /etc/systemd/resolved.conf.d || true
@@ -126,7 +118,14 @@ jobs:
         run: |
           docker pull alpine:latest
           docker pull quay.io/prometheus/prometheus:latest
-
+      - name: Add container customizations
+        run: |
+          git clone https://github.com/Avocado-Extra-Charge/runner-container-hooks/settings /opt/runner-container-hooks
+          cd /opt/runner-container-hooks/packages/hooklib
+          npm install && npm run build
+          cd ../docker
+          npm install && npm run build
+          echo "ACTIONS_RUNNER_CONTAINER_HOOKS=/opt/runner-container-hooks/packages/docker/dist/index.js" | sudo tee -a /etc/environment /root/actions-runner/.env
       - name: Image Software List
         run: |
           echo '```plain' >> $GITHUB_STEP_SUMMARY
