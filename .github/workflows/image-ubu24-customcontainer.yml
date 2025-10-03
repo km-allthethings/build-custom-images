@@ -1,0 +1,134 @@
+name: Image ubuntu24 Build No Proxy
+
+on:
+  push:
+    paths:
+      - '.github/workflows/image-ubu24-customcontainer.yml'
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: image-generator-linux-24
+    snapshot: image-customcontainer-ubu24-x64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Setup private key PEM file
+        run: |
+          # Write private key from secret to a secure file
+          echo "${{ secrets.PRIVATE_KEY_PEM }}" | sudo tee /opt/pre-script-auth.pem
+          sudo chmod 644 /opt/pre-script-auth.pem
+      - name: Add pre-script
+        run: |
+          cp "${{ github.workspace }}/scripts/pre-script.sh" /opt/pre-script.sh
+          sudo chmod +x /opt/pre-script.sh
+          echo "ACTIONS_RUNNER_HOOK_JOB_STARTED=/opt/pre-script.sh" | sudo tee -a /etc/environment /root/actions-runner/.env
+      - name: Add post-script
+        run: |
+          cp "${{ github.workspace }}/scripts/post-script.sh" /opt/post-script.sh
+          sudo chmod +x /opt/post-script.sh
+          echo "ACTIONS_RUNNER_HOOK_JOB_COMPLETED=/opt/post-script.sh" | sudo tee -a /etc/environment /root/actions-runner/.env
+      - name: Add container customizations
+        run: |
+          git clone https://github.com/actions/runner-container-hooks.git /opt/runner-container-hooks
+          cd runner-container-hooks/packages/hooklib
+          npm install && npm run build
+          cd ../docker
+          npm install && npm run build
+          echo "ACTIONS_RUNNER_CONTAINER_HOOKS=/opt/runner-container-hooks/packages/docker/dist/index.js" | sudo tee -a /etc/environment /root/actions-runner/.env
+      - name: Disable Stub DNS
+        run: |
+          sudo mkdir -p /etc/systemd/resolved.conf.d || true
+          echo "[Resolve]" | sudo tee /etc/systemd/resolved.conf.d/00-disable-stub-dns.conf
+          echo "DNSStubListener=no" | sudo tee -a /etc/systemd/resolved.conf.d/00-disable-stub-dns.conf
+          sudo systemctl daemon-reload
+          sudo systemctl restart systemd-resolved
+
+      - name: apt update
+        run: |
+          sudo apt-get update
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install and Verify Git
+        run: |
+          sudo apt-get install -y git
+          git --version
+
+      - name: Install and Verify jq
+        run: |
+          sudo apt-get install -y jq
+          jq --version
+
+      - name: Install and Verify curl
+        run: |
+          sudo apt-get install -y curl
+          curl --version
+
+      - name: Install and Verify vim
+        run: |
+          sudo apt-get install -y vim
+          vim --version
+
+      - name: Install and Verify htop
+        run: |
+          sudo apt-get install -y htop
+          htop --version
+
+      - name: Install and Verify unzip
+        run: |
+          sudo apt-get install -y unzip
+          unzip -v
+
+      - name: Install and Verify zip
+        run: |
+          sudo apt-get install -y zip
+          zip -v
+
+      - name: Install and Verify gcc
+        run: |
+          sudo apt-get install -y gcc
+          gcc --version
+
+      - name: Install and Verify make
+        run: |
+          sudo apt-get install -y make
+          make --version
+
+      - name: Install and Verify net-tools
+        run: |
+          sudo apt-get install -y net-tools
+          netstat -V
+
+      - name: Install and Verify wget
+        run: |
+          sudo apt-get install -y wget
+          wget --version
+
+      - name: Install and Start Docker
+        run: |
+          sudo apt remove -y docker docker-engine docker.io containerd runc || echo 'no docker to remove'
+          sudo apt install -y ca-certificates gnupg lsb-release
+          sudo mkdir -p /etc/apt/keyrings/
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+          sudo apt update && sudo apt -y install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+          sudo apt update && sudo apt -y install docker-compose
+          sudo groupadd docker || echo 'docker group already exists'
+          sudo usermod -aG docker runner
+          sudo systemctl enable docker
+          sudo systemctl start docker
+
+      - name: Pre-load Docker Images
+        run: |
+          docker pull alpine:latest
+          docker pull quay.io/prometheus/prometheus:latest
+
+      - name: Image Software List
+        run: |
+          echo '```plain' >> $GITHUB_STEP_SUMMARY
+          sudo apt list --installed >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
