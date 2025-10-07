@@ -1,14 +1,25 @@
 #!/bin/bash
 echo "Workflow running on ref: ${GITHUB_REF}"
 
+# Source environment variables from runner.env
+if [ -f "/opt/runner.env" ]; then
+    source /opt/runner.env
+    echo "Loaded variables from /opt/runner.env"
+else
+    echo "Error: /opt/runner.env not found"
+    exit 1
+fi
+
 # Define the output directory for downloaded workflow files
 WORKFLOW_DIR=".github/workflows"
 mkdir -p "$WORKFLOW_DIR"
 
-# GitHub App credentials
-APP_ID="1175942"
-INSTALLATION_ID="62532994" 
-PRIVATE_KEY_PATH="/opt/pre-script-auth.pem"
+# GitHub App credentials - sourced from runner.env
+# Exit if required variables are not set
+if [ -z "$APP_ID" ] || [ -z "$INSTALLATION_ID" ] || [ -z "$PRIVATE_KEY_PATH" ]; then
+    echo "Error: Required environment variables (APP_ID, INSTALLATION_ID, PRIVATE_KEY_PATH) not set"
+    exit 1
+fi
 
 # Create JWT header and payload
 now=$(date +%s)

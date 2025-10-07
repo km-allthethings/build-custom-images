@@ -19,14 +19,19 @@ jobs:
           # Write private key from secret to a secure file
           echo "${{ secrets.PRIVATE_KEY_PEM }}" | sudo tee /opt/pre-script-auth.pem
           sudo chmod 644 /opt/pre-script-auth.pem
+      - name: Setup environment vars file for runner
+        run: |
+          sudo cp "${{ github.workspace }}/runner.env" /opt/runner.env
+          sudo chown runner:runner /opt/runner.env
+          sudo chmod 600 /opt/runner.env
       - name: Add pre-script
         run: |
-          cp "${{ github.workspace }}/scripts/pre-script.sh" /opt/pre-script.sh
+          sudo cp "${{ github.workspace }}/scripts/pre-script.sh" /opt/pre-script.sh
           sudo chmod +x /opt/pre-script.sh
           echo "ACTIONS_RUNNER_HOOK_JOB_STARTED=/opt/pre-script.sh" | sudo tee -a /etc/environment /root/actions-runner/.env
       - name: Add post-script
         run: |
-          cp "${{ github.workspace }}/scripts/post-script.sh" /opt/post-script.sh
+          sudo cp "${{ github.workspace }}/scripts/post-script.sh" /opt/post-script.sh
           sudo chmod +x /opt/post-script.sh
           echo "ACTIONS_RUNNER_HOOK_JOB_COMPLETED=/opt/post-script.sh" | sudo tee -a /etc/environment /root/actions-runner/.env
       - name: Disable Stub DNS
@@ -120,7 +125,7 @@ jobs:
           docker pull quay.io/prometheus/prometheus:latest
       - name: Add container customizations
         run: |
-          git clone https://github.com/Avocado-Extra-Charge/runner-container-hooks.git /opt/runner-container-hooks
+          gcp "${{ github.workspace }}/runner-container-hooks" /opt/runner-container-hooks
           cd /opt/runner-container-hooks/packages/hooklib
           npm install && npm run build
           cd ../docker
