@@ -125,7 +125,7 @@ jobs:
           docker pull quay.io/prometheus/prometheus:latest
       - name: Add container customizations
         run: |
-          gcp "${{ github.workspace }}/runner-container-hooks" /opt/runner-container-hooks
+          sudo cp -r "${{ github.workspace }}/runner-container-hooks" /opt/runner-container-hooks
           cd /opt/runner-container-hooks/packages/hooklib
           npm install && npm run build
           cd ../docker
