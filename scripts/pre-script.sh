@@ -184,5 +184,3 @@ EOF
 fi
 
 echo "Security check passed. The workflow files appear safe."
-echo "sleeping for 5 minutes to test billing"
-sleep 300
