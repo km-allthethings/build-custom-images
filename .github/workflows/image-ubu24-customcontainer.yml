@@ -126,6 +126,7 @@ jobs:
       - name: Add container customizations
         run: |
           sudo cp -r "${{ github.workspace }}/runner-container-hooks" /opt/runner-container-hooks
+          sudo chown -R runner:runner /opt/runner-container-hooks
           cd /opt/runner-container-hooks/packages/hooklib
           npm install && npm run build
           cd ../docker

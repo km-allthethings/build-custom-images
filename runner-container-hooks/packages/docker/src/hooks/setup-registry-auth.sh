@@ -20,6 +20,11 @@ if [ -z "$ROLE_ARN" ] || [ -z "$AWS_REGION" ] || [ -z "$SECRET_ID" ] || [ -z "$A
     exit 1
 fi
 
+# Create temporary Docker config directory with restricted permissions
+TEMP_DOCKER_CONFIG=$(mktemp -d -t docker-config.XXXXXX)
+chmod 700 "$TEMP_DOCKER_CONFIG"
+trap "rm -rf $TEMP_DOCKER_CONFIG" EXIT
+
 # Disable bash history and command echoing for security
 set +o history
 set +x
@@ -91,13 +96,18 @@ fi
 # Part 3: Log in to Azure Container Registry
 # ==========================================================
 echo "Logging into $ACR_REGISTRY..."
-echo "$ACR_PASSWORD" | docker login "$ACR_REGISTRY" --username "$ACR_USERNAME" --password-stdin 2>/dev/null
+echo "$ACR_PASSWORD" | docker --config "$TEMP_DOCKER_CONFIG" login "$ACR_REGISTRY" --username "$ACR_USERNAME" --password-stdin 2>/dev/null
 
 # Verify login was successful
 if [ $? -ne 0 ]; then
   echo "Error: Docker login failed." >&2
   exit 1
 fi
+
+# Copy the auth config to the default location for the runner session
+mkdir -p ~/.docker
+cp "$TEMP_DOCKER_CONFIG/config.json" ~/.docker/config.json
+chmod 600 ~/.docker/config.json
 
 # Clear credentials from memory
 unset ACR_USERNAME
