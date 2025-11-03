@@ -1,0 +1,39 @@
+name: Win - Image Build with Proxy
+
+on:
+  push:
+    paths:
+      - '.github/workflows/image-win22-proxy-env.yml'
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: image-generator-win2022
+    snapshot: proxy-img-win22-x64
+    steps:
+      - name: Set HTTP_PROXY (Machine)
+        run: |
+          [Environment]::SetEnvironmentVariable('http_proxy', '10.0.0.0:3128', [System.EnvironmentVariableTarget]::Machine)
+      - name: Set HTTPS_PROXY (Machine)
+        run: |
+          [Environment]::SetEnvironmentVariable('https_proxy', '10.0.0.0:3128', [System.EnvironmentVariableTarget]::Machine)
+      - name: Set no_proxy (Machine)
+        run: |
+          [Environment]::SetEnvironmentVariable('no_proxy', 'localhost,127.0.0.1,0.0.0.0,10.0.0.0', [System.EnvironmentVariableTarget]::Machine)
+      - name: Set WinHTTP Proxy
+        run: |
+          new-item proxy.json
+          set-content .\proxy.json '{
+          "ProxyIsEnabled": true,
+          "Proxy": "10.0.0.0:3128",
+          "ProxyBypass": "localhost;127.0.0.1;10.0.0.0",
+          "AutoConfigIsEnabled": false,
+          "AutoDetect": false,
+          "PerUserProxySettings": false
+          }'
+
+          get-content .\proxy.json
+
+          netsh winhttp set advproxy setting-scope=machine settings-file=.\proxy.json
+          netsh winhttp show advproxy
