@@ -1,0 +1,21 @@
+name: Image Ubuntu 24 Copilot Coding Agent 
+
+on:
+  push:
+    paths:
+      - '.github/workflows/image-ubu24-cca-only.yml'
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: image-generator-linux-24
+    snapshot: image-cca-ubu24-x64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Add restrict-to-cca-workflows script
+        run: |
+          sudo cp "${{ github.workspace }}/scripts/restrict-to-cca-workflows.sh" /opt/restrict-to-cca-workflows.sh
+          sudo chmod +x /opt/restrict-to-cca-workflows.sh
+          echo "ACTIONS_RUNNER_HOOK_JOB_STARTED=/opt/restrict-to-cca-workflows.sh" | sudo tee -a /etc/environment /root/actions-runner/.env
